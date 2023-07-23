@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bazematic</title>
+    <style>
+        #jsspeccy {
+            float: left;
+        }
+        #source {
+            float: left;
+            width: 30em;
+            height: 30em;
+        }
+    </style>
+    <script src="jsspeccy/jsspeccy.js"></script>
+    <script type="text/javascript">
+const Z80_SOURCE = `
+    org 0x8000
+    ld a,3
+    out (254),a
+loop
+    jr loop
+`;
+
+    var Module = {
+        onRuntimeInitialized: () => {
+            const emu = JSSpeccy(
+                document.getElementById('jsspeccy'),
+                {zoom: 2, machine: 128, sandbox: true, autoStart: true, uiEnabled: false, keyboardEnabled: false}
+            );
+
+            const RasmAssemble = Module.cwrap('RasmAssembleInfo', 'number', ['string', 'number', 'number', 'number', 'number']);
+            const RasmFreeInfoStruct = Module.cwrap('RasmFreeInfoStruct', 'void', ['number']);
+
+            const destPtr = Module._malloc(4);
+            const destLenPtr = Module._malloc(4);
+            const infoPtr = Module._malloc(4);
+
+            const assembleToSnapshot = (source) => {
+                const result = RasmAssemble(source, source.length, destPtr, destLenPtr, infoPtr);
+                if (result != 0) {
+                    console.log("Error: " + result);
+                } else {
+                    const destLen = Module.getValue(destLenPtr, 'i32');
+                    const dest = Module.getValue(destPtr, 'i32');
+                    const info = Module.getValue(infoPtr, 'i32');
+                    const start = Module.getValue(info + 32, 'i32');
+                    const destArray = new Uint8Array(Module.HEAPU8.buffer, dest, destLen);
+                    RasmFreeInfoStruct(info);
+                    Module._free(dest);
+
+                    const snapshotMemory = new Uint8Array(0xc000);
+                    for (let i=0; i < destLen; i++) {
+                        snapshotMemory[start + i] = destArray[i];
+                    }
+                    const snapshot = {
+                        registers: {
+                            'AF': 0,
+                            'BC': 0,
+                            'HL': 0,
+                            'PC': start,
+                            'SP': start - 2,
+                            'IR': 0,
+                            'DE': 0,
+                            'BC_': 0,
+                            'DE_': 0,
+                            'HL_': 0,
+                            'AF_': 0,
+                            'IY': 0,
+                            'IX': 0,
+                            'iff1': 1,
+                            'iff2': 1,
+                            'im': 1,
+                        },
+                        ulaState: {
+                            borderColour: 0,
+                        },
+                        model: 128,
+                        memoryPages: {
+                            5: new Uint8Array(snapshotMemory.buffer, 0, 0x4000),
+                            2: new Uint8Array(snapshotMemory.buffer, 0x4000, 0x4000),
+                            0: new Uint8Array(snapshotMemory.buffer, 0x8000, 0x4000),
+                        },
+                        tstates: 0,
+                    };
+                    return snapshot;
+                }
+            }
+
+            let snapshot = assembleToSnapshot(Z80_SOURCE);
+            emu.onReady(() => {
+                emu.loadSnapshotFromStruct(snapshot);
+            });
+            const sourceTextArea = document.getElementById("source");
+            sourceTextArea.value = Z80_SOURCE;
+            sourceTextArea.addEventListener("keydown", (event) => {
+                if (event.code == 'KeyS' && (event.metaKey || event.ctrlKey)) {
+                    const snapshot = assembleToSnapshot(sourceTextArea.value);
+                    emu.loadSnapshotFromStruct(snapshot);
+                    event.preventDefault();
+                }
+            })
+        }
+    };
+    </script>
+    <script src="rasm.js"></script>
+</head>
+<body>
+    <div id="jsspeccy"></div>
+    <textarea id="source"></textarea>
+</body>
+</html>
