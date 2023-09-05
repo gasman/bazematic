@@ -14,6 +14,7 @@
         }
     </style>
     <script src="jsspeccy/jsspeccy.js"></script>
+    <script src="ace/ace.js"></script>
     <script type="text/javascript">
 const Z80_SOURCE = `
     org 0x8000
@@ -92,11 +93,14 @@ loop
             emu.onReady(() => {
                 emu.loadSnapshotFromStruct(snapshot);
             });
-            const sourceTextArea = document.getElementById("source");
-            sourceTextArea.value = Z80_SOURCE;
-            sourceTextArea.addEventListener("keydown", (event) => {
+            const editor = ace.edit("source");
+            editor.setTheme("ace/theme/monokai");
+            editor.session.setMode("ace/mode/assembly_z80");
+            editor.setValue(Z80_SOURCE);
+
+            window.addEventListener("keydown", (event) => {
                 if (event.code == 'KeyS' && (event.metaKey || event.ctrlKey)) {
-                    const snapshot = assembleToSnapshot(sourceTextArea.value);
+                    const snapshot = assembleToSnapshot(editor.getValue());
                     emu.loadSnapshotFromStruct(snapshot);
                     event.preventDefault();
                 }
@@ -108,6 +112,6 @@ loop
 </head>
 <body>
     <div id="jsspeccy"></div>
-    <textarea id="source"></textarea>
+    <div id="source"></div>
 </body>
 </html>
