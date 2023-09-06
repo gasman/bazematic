@@ -19,10 +19,10 @@
             position: absolute;
             width: 640px;
             height: 480px;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.3);
         }
         #source .ace_gutter {
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.3);
             color: #666;
         }
     </style>
@@ -108,6 +108,8 @@ loop
             });
             const editor = ace.edit("source");
             editor.setTheme("ace/theme/twilight");
+            editor.setShowPrintMargin(false);
+            editor.setFontSize(16);
             // editor.session.setMode("ace/mode/assembly_z80");
             editor.session.setValue(Z80_SOURCE);
             editor.focus();
