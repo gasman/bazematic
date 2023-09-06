@@ -118,7 +118,41 @@ loop
                     const snapshot = assembleToSnapshot(editor.getValue());
                     emu.loadSnapshotFromStruct(snapshot);
                 }
-            })
+            });
+
+            const bazematic = document.getElementById('bazematic');
+            document.getElementById('fullscreen').addEventListener('click', () => {
+                bazematic.requestFullscreen();
+            });
+            const emuRoot = document.getElementById('jsspeccy');
+            const emuCanvas = emuRoot.getElementsByTagName('canvas')[0];
+            const emuWrapper = emuCanvas.parentElement;
+            const sourceElement = document.getElementById('source');
+            bazematic.addEventListener('fullscreenchange', () => {
+                if (document.fullscreenElement) {
+                    emuWrapper.style.height = window.screen.availHeight + 'px';
+                    const emuWidth = window.screen.availHeight * 640/480;
+                    emuWrapper.style.width = emuWidth + 'px';
+                    emuWrapper.style.left = (window.screen.availWidth - emuWidth) / 2 + 'px';
+                    emuCanvas.style.width = '100%';
+                    emuCanvas.style.height = '100%';
+
+                    sourceElement.style.height = window.screen.availHeight + 'px';
+                    sourceElement.style.width = emuWidth + 'px';
+                    sourceElement.style.left = (window.screen.availWidth - emuWidth) / 2 + 'px';
+                } else {
+                    emuRoot.style.position = 'absolute';
+                    emuCanvas.style.width = '640px';
+                    emuCanvas.style.height = '480px';
+                    emuWrapper.style.left = '0px';
+                    emuWrapper.style.width = '640px';
+                    emuWrapper.style.height = '480px';
+
+                    sourceElement.style.width = '640px';
+                    sourceElement.style.height = '480px';
+                    sourceElement.style.left = '0px';
+                }
+            });
         }
     };
     </script>
@@ -129,5 +163,6 @@ loop
         <div id="jsspeccy"></div>
         <div id="source"></div>
     </div>
+    <button id="fullscreen">Fullscreen</button>
 </body>
 </html>
