@@ -112,11 +112,21 @@ loop
             editor.session.setValue(Z80_SOURCE);
             editor.focus();
 
+            const sourceElement = document.getElementById('source');
+
             window.addEventListener("keydown", (event) => {
                 if (event.code == 'KeyS' && (event.metaKey || event.ctrlKey)) {
                     event.preventDefault();
                     const snapshot = assembleToSnapshot(editor.getValue());
                     emu.loadSnapshotFromStruct(snapshot);
+                } else if (event.code == 'KeyH' && (event.metaKey || event.ctrlKey)) {
+                    event.preventDefault();
+                    if (sourceElement.style.display == 'none') {
+                        sourceElement.style.display = 'block';
+                        editor.focus();
+                    } else {
+                        sourceElement.style.display = 'none';
+                    }
                 }
             });
 
@@ -127,7 +137,6 @@ loop
             const emuRoot = document.getElementById('jsspeccy');
             const emuCanvas = emuRoot.getElementsByTagName('canvas')[0];
             const emuWrapper = emuCanvas.parentElement;
-            const sourceElement = document.getElementById('source');
             bazematic.addEventListener('fullscreenchange', () => {
                 if (document.fullscreenElement) {
                     emuWrapper.style.height = window.screen.availHeight + 'px';
