@@ -66,7 +66,7 @@ loop
 
                     const snapshotMemory = new Uint8Array(0xc000);
                     for (let i=0; i < destLen; i++) {
-                        snapshotMemory[start + i] = destArray[i];
+                        snapshotMemory[start + i - 0x4000] = destArray[i];
                     }
                     const snapshot = {
                         registers: {
