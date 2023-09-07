@@ -53,12 +53,32 @@ loop
 
             const assembleToSnapshot = (source) => {
                 const result = RasmAssemble(source, source.length, destPtr, destLenPtr, infoPtr);
+                const destLen = Module.getValue(destLenPtr, 'i32');
+                const dest = Module.getValue(destPtr, 'i32');
+                const info = Module.getValue(infoPtr, 'i32');
+                let errorPtr = Module.getValue(info, 'i32');
+                const nbError = Module.getValue(info + 4, 'i32');
+                const maxError = Module.getValue(info + 8, 'i32');
+                const warnErr = Module.getValue(info + 12, 'i32');
                 if (result != 0) {
                     console.log("Error: " + result);
+                    console.log("errorPtr: " + errorPtr);
+                    console.log("nbError: " + nbError);
+                    console.log("maxError: " + maxError);
+                    console.log("warnErr: " + warnErr);
+                    for (let i = 0; i < nbError; i++) {
+                        const filenamePtr = Module.getValue(errorPtr, 'i32');
+                        const line = Module.getValue(errorPtr + 4, 'i32');
+                        const msgPtr = Module.getValue(errorPtr + 8, 'i32');
+                        const lenMsg = Module.getValue(errorPtr + 12, 'i32');
+                        const lenFilename = Module.getValue(errorPtr + 16, 'i32');
+                        console.log("Error: " + Module.UTF8ToString(msgPtr, lenMsg) + " at " + Module.UTF8ToString(filenamePtr, lenFilename) + ":" + line);
+                        errorPtr += 20;
+                    }
+                    // RasmFreeInfoStruct(info);
                 } else {
-                    const destLen = Module.getValue(destLenPtr, 'i32');
-                    const dest = Module.getValue(destPtr, 'i32');
-                    const info = Module.getValue(infoPtr, 'i32');
+                    console.log("Success: " + result);
+                    console.log("errorPtr: " + errorPtr);
                     const start = Module.getValue(info + 32, 'i32');
                     const destArray = new Uint8Array(Module.HEAPU8.buffer, dest, destLen);
                     RasmFreeInfoStruct(info);
@@ -121,7 +141,9 @@ loop
                 if (event.code == 'KeyS' && (event.metaKey || event.ctrlKey)) {
                     event.preventDefault();
                     const snapshot = assembleToSnapshot(editor.getValue());
-                    emu.loadSnapshotFromStruct(snapshot);
+                    if (snapshot) {
+                        emu.loadSnapshotFromStruct(snapshot);
+                    }
                 } else if (event.code == 'KeyH' && (event.metaKey || event.ctrlKey)) {
                     event.preventDefault();
                     if (sourceElement.style.display == 'none') {
