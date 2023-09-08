@@ -7,8 +7,20 @@
         body {
             background-color: #444;
         }
-        #fullscreen {
+        #instructions {
+            width: 200px;
             position: absolute;
+            border: 1px solid black;
+            background-color: white;
+            padding: 10px;
+        }
+        #instructions h1 {
+            margin: 0;
+        }
+        #instructions h2 {
+            margin: 0;
+            font-size: 12pt;
+            font-style: italic;
         }
         #bazematic {
             position: relative;
@@ -175,9 +187,6 @@ loop
             });
 
             const bazematic = document.getElementById('bazematic');
-            document.getElementById('fullscreen').addEventListener('click', () => {
-                bazematic.requestFullscreen();
-            });
             const emuRoot = document.getElementById('jsspeccy');
             const emuCanvas = emuRoot.getElementsByTagName('canvas')[0];
             const emuWrapper = emuCanvas.parentElement;
@@ -214,7 +223,16 @@ loop
     <script src="rasm/rasm.js"></script>
 </head>
 <body>
-    <button id="fullscreen">Fullscreen</button>
+    <div id="instructions">
+        <h1>bazematic</h1>
+        <h2>a ZX Spectrum live coding environment</h2>
+        <p>Controls:</p>
+        <ul>
+            <li>cmd + S: recompile code</li>
+            <li>cmd + enter: toggle fullscreen</li>
+            <li>cms + H: show / hide code</li>
+        </ul>
+    </div>
     <div id="bazematic">
         <div id="jsspeccy"></div>
         <div id="source"></div>
