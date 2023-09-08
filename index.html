@@ -75,7 +75,7 @@ loop
                         console.log("Error: " + Module.UTF8ToString(msgPtr, lenMsg) + " at " + Module.UTF8ToString(filenamePtr, lenFilename) + ":" + line);
                         errorPtr += 20;
                     }
-                    // RasmFreeInfoStruct(info);
+                    RasmFreeInfoStruct(info);
                 } else {
                     console.log("Success: " + result);
                     console.log("errorPtr: " + errorPtr);
