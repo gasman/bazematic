@@ -7,9 +7,13 @@
         body {
             background-color: #444;
         }
+        #fullscreen {
+            position: absolute;
+        }
         #bazematic {
             position: relative;
             width: 640px;
+            height: 480px;
             margin: auto;
         }
         #jsspeccy {
@@ -24,6 +28,15 @@
         #source .ace_gutter {
             background: rgba(0, 0, 0, 0.3);
             color: #666;
+        }
+        #errors {
+            position: absolute;
+            bottom: 0;
+            font-size: 12pt;
+            margin: 0;
+            padding: 0;
+            color: #f00;
+            z-index: 100;
         }
     </style>
     <script src="jsspeccy/jsspeccy.js"></script>
@@ -61,24 +74,17 @@ loop
                 const maxError = Module.getValue(info + 8, 'i32');
                 const warnErr = Module.getValue(info + 12, 'i32');
                 if (result != 0) {
-                    console.log("Error: " + result);
-                    console.log("errorPtr: " + errorPtr);
-                    console.log("nbError: " + nbError);
-                    console.log("maxError: " + maxError);
-                    console.log("warnErr: " + warnErr);
+                    const errorMessages = [];
                     for (let i = 0; i < nbError; i++) {
-                        const filenamePtr = Module.getValue(errorPtr, 'i32');
                         const line = Module.getValue(errorPtr + 4, 'i32');
                         const msgPtr = Module.getValue(errorPtr + 8, 'i32');
                         const lenMsg = Module.getValue(errorPtr + 12, 'i32');
-                        const lenFilename = Module.getValue(errorPtr + 16, 'i32');
-                        console.log("Error: " + Module.UTF8ToString(msgPtr, lenMsg) + " at " + Module.UTF8ToString(filenamePtr, lenFilename) + ":" + line);
+                        errorMessages.push("line " + line + ": " + Module.UTF8ToString(msgPtr, lenMsg));
                         errorPtr += 20;
                     }
                     RasmFreeInfoStruct(info);
+                    return {success: false, errorMessages: errorMessages};
                 } else {
-                    console.log("Success: " + result);
-                    console.log("errorPtr: " + errorPtr);
                     const start = Module.getValue(info + 32, 'i32');
                     const destArray = new Uint8Array(Module.HEAPU8.buffer, dest, destLen);
                     RasmFreeInfoStruct(info);
@@ -119,13 +125,13 @@ loop
                         },
                         tstates: 0,
                     };
-                    return snapshot;
+                    return {success: true, snapshot: snapshot};
                 }
             }
 
-            let snapshot = assembleToSnapshot(Z80_SOURCE);
+            let result = assembleToSnapshot(Z80_SOURCE);
             emu.onReady(() => {
-                emu.loadSnapshotFromStruct(snapshot);
+                emu.loadSnapshotFromStruct(result.snapshot);
             });
             const editor = ace.edit("source");
             editor.setTheme("ace/theme/twilight");
@@ -136,21 +142,27 @@ loop
             editor.focus();
 
             const sourceElement = document.getElementById('source');
+            const errorsElement = document.getElementById('errors');
 
             window.addEventListener("keydown", (event) => {
                 if (event.code == 'KeyS' && (event.metaKey || event.ctrlKey)) {
                     event.preventDefault();
-                    const snapshot = assembleToSnapshot(editor.getValue());
-                    if (snapshot) {
-                        emu.loadSnapshotFromStruct(snapshot);
+                    const result = assembleToSnapshot(editor.getValue());
+                    if (result.success) {
+                        errorsElement.innerText = "";
+                        emu.loadSnapshotFromStruct(result.snapshot);
+                    } else {
+                        errorsElement.innerText = (result.errorMessages.join("\n"));
                     }
                 } else if (event.code == 'KeyH' && (event.metaKey || event.ctrlKey)) {
                     event.preventDefault();
                     if (sourceElement.style.display == 'none') {
                         sourceElement.style.display = 'block';
+                        errorsElement.style.display = 'block';
                         editor.focus();
                     } else {
                         sourceElement.style.display = 'none';
+                        errorsElement.style.display = 'none';
                     }
                 } else if (event.code == 'Enter' && (event.metaKey || event.ctrlKey)) {
                     event.preventDefault();
@@ -181,6 +193,7 @@ loop
                     sourceElement.style.height = window.screen.availHeight + 'px';
                     sourceElement.style.width = emuWidth + 'px';
                     sourceElement.style.left = (window.screen.availWidth - emuWidth) / 2 + 'px';
+                    errorsElement.style.left = (window.screen.availWidth - emuWidth) / 2 + 'px';
                 } else {
                     emuRoot.style.position = 'absolute';
                     emuCanvas.style.width = '640px';
@@ -192,6 +205,7 @@ loop
                     sourceElement.style.width = '640px';
                     sourceElement.style.height = '480px';
                     sourceElement.style.left = '0px';
+                    errorsElement.style.left = '0px';
                 }
             });
         }
@@ -200,10 +214,11 @@ loop
     <script src="rasm/rasm.js"></script>
 </head>
 <body>
+    <button id="fullscreen">Fullscreen</button>
     <div id="bazematic">
         <div id="jsspeccy"></div>
         <div id="source"></div>
+        <pre id="errors"></pre>
     </div>
-    <button id="fullscreen">Fullscreen</button>
 </body>
 </html>
