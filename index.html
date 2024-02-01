@@ -132,8 +132,8 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
                     }
                     const snapshot = {
                         registers: {
-                            'AF': 0,
-                            'BC': 0,
+                            'AF': (start & 0xff) << 8,
+                            'BC': start,
                             'HL': 0,
                             'PC': start,
                             'SP': start - 2,
@@ -141,7 +141,7 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
                             'DE': 0,
                             'BC_': 0,
                             'DE_': 0,
-                            'HL_': 0,
+                            'HL_': 0x2758,
                             'AF_': 0,
                             'IY': 0x5c3a,
                             'IX': 0,
