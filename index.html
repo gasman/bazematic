@@ -181,16 +181,20 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
             const sourceElement = document.getElementById('source');
             const errorsElement = document.getElementById('errors');
 
+            const tryToAssemble = () => {
+                const result = assembleToSnapshot(editor.getValue());
+                if (result.success) {
+                    errorsElement.innerText = "";
+                    emu.loadSnapshotFromStruct(result.snapshot);
+                } else {
+                    errorsElement.innerText = (result.errorMessages.join("\n"));
+                }
+            };
+
             window.addEventListener("keydown", (event) => {
                 if (event.code == 'KeyS' && (event.metaKey || event.ctrlKey)) {
                     event.preventDefault();
-                    const result = assembleToSnapshot(editor.getValue());
-                    if (result.success) {
-                        errorsElement.innerText = "";
-                        emu.loadSnapshotFromStruct(result.snapshot);
-                    } else {
-                        errorsElement.innerText = (result.errorMessages.join("\n"));
-                    }
+                    tryToAssemble();
                 } else if (event.code == 'KeyH' && (event.metaKey || event.ctrlKey)) {
                     event.preventDefault();
                     if (sourceElement.style.display == 'none') {
@@ -262,16 +266,8 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
                 ws_stream.addEventListener("message", (event)=>{ 
                     if(ws_grabber.checked) {
                         ws_status.innerHTML = "🔵";
-                        console.log(event.data)
-                        event.preventDefault();
                         editor.setValue(event.data);
-                        const result = assembleToSnapshot(editor.getValue());
-                        if (result.success) {
-                        errorsElement.innerText = "";
-                        emu.loadSnapshotFromStruct(result.snapshot);
-                        } else {
-                            errorsElement.innerText = (result.errorMessages.join("\n"));
-                        }
+                        tryToAssemble();
                         setTimeout(() => {ws_status.innerHTML = "🟢";},500);
                     }
                 })
