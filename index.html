@@ -259,10 +259,6 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
 
                     ws_status.innerHTML = "🟠";
                 });
-                ws_stream.addEventListener("close", (event)=>{
-
-                    ws_status.innerHTML = "🟠";
-                });
                 ws_stream.addEventListener("message", (event)=>{ 
                     if(ws_grabber.checked) {
                         ws_status.innerHTML = "🔵";
