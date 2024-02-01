@@ -51,14 +51,19 @@
             background: rgba(0, 0, 0, 0.3);
             color: #666;
         }
-        #errors {
+        #status {
             position: absolute;
             bottom: 0;
             font-size: 12pt;
             margin: 0;
             padding: 0;
-            color: #f00;
             z-index: 100;
+        }
+        #status.error {
+            color: #f00;
+        }
+        #status.success {
+            color: #0f0;
         }
     </style>
     <script src="jsspeccy/jsspeccy.js"></script>
@@ -160,7 +165,7 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
                         ws_stream.send(source);
                     }
 
-                    return {success: true, snapshot: snapshot};
+                    return {success: true, snapshot: snapshot, codeLength: destLen};
                     
                 }
                
@@ -179,15 +184,17 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
             editor.focus();
 
             const sourceElement = document.getElementById('source');
-            const errorsElement = document.getElementById('errors');
+            const statusElement = document.getElementById('status');
 
             const tryToAssemble = () => {
                 const result = assembleToSnapshot(editor.getValue());
                 if (result.success) {
-                    errorsElement.innerText = "";
+                    statusElement.innerText = `Assembled OK (${result.codeLength} bytes)`;
+                    statusElement.className = "success";
                     emu.loadSnapshotFromStruct(result.snapshot);
                 } else {
-                    errorsElement.innerText = (result.errorMessages.join("\n"));
+                    statusElement.className = "error";
+                    statusElement.innerText = (result.errorMessages.join("\n"));
                 }
             };
 
@@ -199,11 +206,11 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
                     event.preventDefault();
                     if (sourceElement.style.display == 'none') {
                         sourceElement.style.display = 'block';
-                        errorsElement.style.display = 'block';
+                        statusElement.style.display = 'block';
                         editor.focus();
                     } else {
                         sourceElement.style.display = 'none';
-                        errorsElement.style.display = 'none';
+                        statusElement.style.display = 'none';
                     }
                 } else if (event.code == 'Enter' && (event.metaKey || event.ctrlKey)) {
                     event.preventDefault();
@@ -231,7 +238,7 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
                     sourceElement.style.height = window.screen.availHeight + 'px';
                     sourceElement.style.width = emuWidth + 'px';
                     sourceElement.style.left = (window.screen.availWidth - emuWidth) / 2 + 'px';
-                    errorsElement.style.left = (window.screen.availWidth - emuWidth) / 2 + 'px';
+                    statusElement.style.left = (window.screen.availWidth - emuWidth) / 2 + 'px';
                 } else {
                     emuRoot.style.position = 'absolute';
                     emuCanvas.style.width = '640px';
@@ -243,7 +250,7 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
                     sourceElement.style.width = '640px';
                     sourceElement.style.height = '480px';
                     sourceElement.style.left = '0px';
-                    errorsElement.style.left = '0px';
+                    statusElement.style.left = '0px';
                 }
             });
 
@@ -256,11 +263,9 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
                 sender_mode = ws_sender.checked;//🟠🟡🟢🔵
                 ws_stream = new WebSocket(ws_address.value);
                 ws_stream.addEventListener("open", (event)=>{
-
                     ws_status.innerHTML = "🟢";
                 });
                 ws_stream.addEventListener("close", (event)=>{
-
                     ws_status.innerHTML = "🟠";
                 });
                 ws_stream.addEventListener("message", (event)=>{ 
@@ -298,7 +303,7 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
     <div id="bazematic">
         <div id="jsspeccy"></div>
         <div id="source"></div>
-        <pre id="errors"></pre>
+        <pre id="status"></pre>
     </div>
 </body>
 </html>
