@@ -161,14 +161,6 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
                         },
                         tstates: 0,
                     };
-                    if(sender_mode) {
-                        ws_stream.send(
-                            JSON.stringify({
-                                "source": source,
-                                "compile": true,
-                            })
-                        );
-                    }
 
                     return {success: true, snapshot: snapshot, codeLength: destLen};
                     
@@ -192,7 +184,16 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
             const statusElement = document.getElementById('status');
 
             const tryToAssemble = () => {
-                const result = assembleToSnapshot(editor.getValue());
+                const source = editor.getValue();
+                if(sender_mode) {
+                    ws_stream.send(
+                        JSON.stringify({
+                            "source": source,
+                            "compile": true,
+                        })
+                    );
+                }
+                const result = assembleToSnapshot(source);
                 if (result.success) {
                     statusElement.innerText = `Assembled OK (${result.codeLength} bytes)`;
                     statusElement.className = "success";
