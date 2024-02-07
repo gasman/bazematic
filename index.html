@@ -182,6 +182,12 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
 
             const sourceElement = document.getElementById('source');
             const statusElement = document.getElementById('status');
+            let statusTimeout = null;
+            const clearStatus = () => {
+                statusElement.innerText = '';
+                statusElement.className = '';
+                statusTimeout = null;
+            };
 
             const tryToAssemble = () => {
                 const source = editor.getValue();
@@ -195,10 +201,17 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
                 }
                 const result = assembleToSnapshot(source);
                 if (result.success) {
+                    if (statusTimeout) {
+                        clearTimeout(statusTimeout);
+                    }
                     statusElement.innerText = `Assembled OK (${result.codeLength} bytes)`;
                     statusElement.className = "success";
                     emu.loadSnapshotFromStruct(result.snapshot);
+                    statusTimeout = setTimeout(clearStatus, 5000);
                 } else {
+                    if (statusTimeout) {
+                        clearTimeout(statusTimeout);
+                    }
                     statusElement.className = "error";
                     statusElement.innerText = (result.errorMessages.join("\n"));
                 }
