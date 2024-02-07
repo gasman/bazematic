@@ -162,7 +162,12 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
                         tstates: 0,
                     };
                     if(sender_mode) {
-                        ws_stream.send(source);
+                        ws_stream.send(
+                            JSON.stringify({
+                                "source": source,
+                                "compile": true,
+                            })
+                        );
                     }
 
                     return {success: true, snapshot: snapshot, codeLength: destLen};
@@ -222,6 +227,27 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
                 }
             });
 
+            let waitingToSend = false;
+            const sendCode = () => {
+                if(sender_mode) {
+                    ws_stream.send(
+                        JSON.stringify({
+                            "source": editor.getValue(),
+                        })
+                    );
+                }
+                waitingToSend = false;
+            }
+
+            editor.on("change", () => {
+                if(sender_mode) {
+                    if (!waitingToSend) {
+                        waitingToSend = true;
+                        setTimeout(sendCode, 300);
+                    }
+                }
+            });
+
             const bazematic = document.getElementById('bazematic');
             const emuRoot = document.getElementById('jsspeccy');
             const emuCanvas = emuRoot.getElementsByTagName('canvas')[0];
@@ -271,8 +297,11 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
                 ws_stream.addEventListener("message", (event)=>{ 
                     if(ws_grabber.checked) {
                         ws_status.innerHTML = "🔵";
-                        editor.setValue(event.data);
-                        tryToAssemble();
+                        const message = JSON.parse(event.data);
+                        editor.setValue(message.source);
+                        if (message.compile) {
+                            tryToAssemble();
+                        }
                         setTimeout(() => {ws_status.innerHTML = "🟢";},500);
                     }
                 })
