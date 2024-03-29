@@ -75,6 +75,10 @@ const Z80_SOURCE = `    org 0x8000
     out (254),a
 loop
     jr loop
+
+; snippets
+down_hl	inc h : ld a,h : and #07 : ret nz : ld a,l : sub #e0 : ld l,a : sbc a,a : and #f8 : add a,h : ld h,a : ret
+up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret c : ld a, h : add a, #08 : ld h,a : ret
 `;
 let sender_mode = false;
 let ws_stream = undefined;
@@ -340,7 +344,7 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
         <h1>Stream <span id="ws_status">🔴</span></h1>
         <h2><p> <label for="sender">Sender</label><input type="radio" id="ws_sender" name="ws_method" value="sender" checked /> | <label for="grabber">Grabber</label><input type="radio" id="ws_grabber" name="ws_method" value="grabber" checked /> </p>
             </h2>
-        <p><input id="ws_address" value="ws://drone.alkama.com:9000/zxs/zxs"/></p>
+        <p><input id="ws_address" value="ws://drone.alkama.com:9000/mf2024/1"/></p>
       <p><button id="ws_start">Start</button></p>
     </div>
     <div id="bazematic">
