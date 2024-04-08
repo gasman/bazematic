@@ -344,6 +344,17 @@ up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret
                 });
 
                 if (reqMode == "grabber" && reqWsAddress != "") {
+                    document.title = 'Grabber: ' + reqWsAddress;
+                    document.getElementById("instructions").remove();
+                    document.getElementById("stream").remove();
+
+                    sourceElement.classList.add("grabber");
+
+                    editor.setOptions({
+                        readOnly: true,
+                        fixedWidthGutter: true,
+                    }); 
+
                     ws_stream = new WebSocket(reqWsAddress);
                     ws_stream.addEventListener("message", (event) => {
                         const message = JSON.parse(event.data);
@@ -353,6 +364,11 @@ up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret
                             tryToAssemble();
                         }
                     });
+                } else if (reqMode == "sender" && reqWsAddress != "") {
+                    document.title = 'Sender: ' + reqWsAddress;
+                    document.getElementById("stream").remove();
+                    ws_stream = new WebSocket(reqWsAddress);
+                    sender_mode = true;
                 } else {
                     const ws_start = document.getElementById("ws_start")
                     const ws_status = document.getElementById("ws_status")
@@ -381,19 +397,6 @@ up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret
                         })
                     }
                 }
-
-                if (reqMode == "grabber" && reqWsAddress != "") {
-                    document.title = 'Grabber: ' + reqWsAddress;
-                    document.getElementById("instructions").remove();
-                    document.getElementById("stream").remove();
-
-                    sourceElement.classList.add("grabber");
-
-                    editor.setOptions({
-                        readOnly: true,
-                        fixedWidthGutter: true,
-                    });                  
-                } 
             }
         };
     </script>
