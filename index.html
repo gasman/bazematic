@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Bazematic</title>
@@ -7,6 +8,7 @@
         body {
             background-color: #444;
         }
+
         #instructions {
             width: 200px;
             position: absolute;
@@ -17,40 +19,54 @@
 
         #stream {
             width: 200px;
-            
-            top:300px;
+
+            top: 300px;
             position: absolute;
             border: 1px solid black;
             background-color: white;
             padding: 10px;
         }
+
         #instructions h1 {
             margin: 0;
         }
+
         #instructions h2 {
             margin: 0;
             font-size: 12pt;
             font-style: italic;
         }
+
         #bazematic {
             position: relative;
             width: 640px;
             height: 480px;
             margin: auto;
         }
+
         #jsspeccy {
             position: absolute;
         }
+
         #source {
             position: absolute;
             width: 640px;
             height: 480px;
             background-color: rgba(0, 0, 0, 0.3);
         }
+
         #source .ace_gutter {
             background: rgba(0, 0, 0, 0.3);
             color: #666;
         }
+
+        #source.grabber .ace_scrollbar {
+            display: none;
+        }
+        #source.grabber .ace_scroller {
+            right: 0 !important; 
+        }
+
         #status {
             position: absolute;
             bottom: 0;
@@ -59,9 +75,11 @@
             padding: 0;
             z-index: 100;
         }
+
         #status.error {
             color: #f00;
         }
+
         #status.success {
             color: #0f0;
         }
@@ -69,7 +87,7 @@
     <script src="jsspeccy/jsspeccy.js"></script>
     <script src="ace/ace.js"></script>
     <script type="text/javascript">
-const Z80_SOURCE = `    org 0x8000
+        const Z80_SOURCE = `    org 0x8000
 
     ld a,3
     out (254),a
@@ -80,255 +98,286 @@ loop
 down_hl	inc h : ld a,h : and #07 : ret nz : ld a,l : sub #e0 : ld l,a : sbc a,a : and #f8 : add a,h : ld h,a : ret
 up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret c : ld a, h : add a, #08 : ld h,a : ret
 `;
-let sender_mode = false;
-let ws_stream = undefined;
-const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x06, 0x00, 0x0b, 0x00, 0x01, 0x00, 0x01, 0x00, 0x06, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3c, 0x40, 0x00, 0xff, 0xcd, 0x00, 0xa4, 0x61, 0x00, 0x00, 0x00, 0x0a, 0x00, 0xff, 0x1e, 0x00, 0x01, 0x38, 0x00, 0x00, 0xff, 0x5c, 0x00, 0x00, 0xb6, 0x5c, 0xbb, 0x5c, 0xcb, 0x5c, 0xff, 0x5c, 0xca, 0x5c, 0x00, 0x5d, 0x03, 0x5d, 0xfe, 0x5c, 0x38, 0x5d, 0x05, 0x5d, 0x05, 0x5d, 0x05, 0x5d, 0x2d, 0x92, 0x5c, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xb6, 0x1a, 0x00, 0x00, 0x4a, 0x03, 0x00, 0x58, 0xff, 0x00, 0x00, 0x21, 0x00, 0x5b, 0x21, 0x17, 0x40, 0x40, 0xe0, 0x50, 0x21, 0x16, 0x21, 0x17, 0x03, 0x38, 0x00, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xa7, 0x61, 0xff, 0xff, 0xf4, 0x09, 0xa8, 0x10, 0x4b, 0xf4, 0x09, 0xc4, 0x15, 0x53, 0x81, 0x0f, 0xc4, 0x15, 0x52, 0xf4, 0x09, 0xc4, 0x15, 0x50, 0x80, 0x00, 0x0a, 0x0d, 0x00, 0xfd, 0x32, 0x34, 0x39, 0x39, 0x39, 0x0e, 0x00, 0x00, 0xa7, 0x61, 0x00, 0x0d, 0x00, 0x14, 0x0d, 0x00, 0xef, 0x22, 0x62, 0x61, 0x7a, 0x65, 0x6d, 0x61, 0x74, 0x31, 0x22, 0xaf, 0x0d, 0x00, 0x1e, 0x0e, 0x00, 0xf9, 0xc0, 0x33, 0x32, 0x37, 0x36, 0x38, 0x0e, 0x00, 0x00, 0x00, 0x80, 0x00, 0x0d, 0x80, 0xef, 0x22, 0x22, 0x0d, 0x80, 0x00, 0x00, 0x00, 0x80, 0x00, 0x6d, 0x61, 0x74, 0x31, 0x20, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x62, 0x61, 0x7a, 0x65, 0x6d, 0x61, 0x74, 0x31, 0x20, 0x20, 0x03]
+        let sender_mode = false;
+        let ws_stream = undefined;
+        const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x06, 0x00, 0x0b, 0x00, 0x01, 0x00, 0x01, 0x00, 0x06, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3c, 0x40, 0x00, 0xff, 0xcd, 0x00, 0xa4, 0x61, 0x00, 0x00, 0x00, 0x0a, 0x00, 0xff, 0x1e, 0x00, 0x01, 0x38, 0x00, 0x00, 0xff, 0x5c, 0x00, 0x00, 0xb6, 0x5c, 0xbb, 0x5c, 0xcb, 0x5c, 0xff, 0x5c, 0xca, 0x5c, 0x00, 0x5d, 0x03, 0x5d, 0xfe, 0x5c, 0x38, 0x5d, 0x05, 0x5d, 0x05, 0x5d, 0x05, 0x5d, 0x2d, 0x92, 0x5c, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xb6, 0x1a, 0x00, 0x00, 0x4a, 0x03, 0x00, 0x58, 0xff, 0x00, 0x00, 0x21, 0x00, 0x5b, 0x21, 0x17, 0x40, 0x40, 0xe0, 0x50, 0x21, 0x16, 0x21, 0x17, 0x03, 0x38, 0x00, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xa7, 0x61, 0xff, 0xff, 0xf4, 0x09, 0xa8, 0x10, 0x4b, 0xf4, 0x09, 0xc4, 0x15, 0x53, 0x81, 0x0f, 0xc4, 0x15, 0x52, 0xf4, 0x09, 0xc4, 0x15, 0x50, 0x80, 0x00, 0x0a, 0x0d, 0x00, 0xfd, 0x32, 0x34, 0x39, 0x39, 0x39, 0x0e, 0x00, 0x00, 0xa7, 0x61, 0x00, 0x0d, 0x00, 0x14, 0x0d, 0x00, 0xef, 0x22, 0x62, 0x61, 0x7a, 0x65, 0x6d, 0x61, 0x74, 0x31, 0x22, 0xaf, 0x0d, 0x00, 0x1e, 0x0e, 0x00, 0xf9, 0xc0, 0x33, 0x32, 0x37, 0x36, 0x38, 0x0e, 0x00, 0x00, 0x00, 0x80, 0x00, 0x0d, 0x80, 0xef, 0x22, 0x22, 0x0d, 0x80, 0x00, 0x00, 0x00, 0x80, 0x00, 0x6d, 0x61, 0x74, 0x31, 0x20, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x62, 0x61, 0x7a, 0x65, 0x6d, 0x61, 0x74, 0x31, 0x20, 0x20, 0x03]
 
-    var Module = {
-        onRuntimeInitialized: () => {
-            const emu = JSSpeccy(
-                document.getElementById('jsspeccy'),
-                {zoom: 2, machine: 128, sandbox: true, autoStart: true, uiEnabled: false, keyboardEnabled: false}
-            );
+        const urlParams = new URLSearchParams(window.location.search);
+        const reqMode = urlParams.get('mode');
+        const reqWsAddress = urlParams.get('ws');
 
-            const RasmAssemble = Module.cwrap('RasmAssembleInfo', 'number', ['string', 'number', 'number', 'number', 'number']);
-            const RasmFreeInfoStruct = Module.cwrap('RasmFreeInfoStruct', 'void', ['number']);
+        var Module = {
+            onRuntimeInitialized: () => {
+                const emu = JSSpeccy(
+                    document.getElementById('jsspeccy'),
+                    { zoom: 2, machine: 128, sandbox: true, autoStart: true, uiEnabled: false, keyboardEnabled: false }
+                );
 
-            const destPtr = Module._malloc(4);
-            const destLenPtr = Module._malloc(4);
-            const infoPtr = Module._malloc(4);
-      
-            const assembleToSnapshot = (source) => {
-                const result = RasmAssemble(source, source.length, destPtr, destLenPtr, infoPtr);
-                const destLen = Module.getValue(destLenPtr, 'i32');
-                const dest = Module.getValue(destPtr, 'i32');
-                const info = Module.getValue(infoPtr, 'i32');
-                let errorPtr = Module.getValue(info, 'i32');
-                const nbError = Module.getValue(info + 4, 'i32');
-                const maxError = Module.getValue(info + 8, 'i32');
-                const warnErr = Module.getValue(info + 12, 'i32');
-                if (result != 0) {
-                    const errorMessages = [];
-                    for (let i = 0; i < nbError; i++) {
-                        const line = Module.getValue(errorPtr + 4, 'i32');
-                        const msgPtr = Module.getValue(errorPtr + 8, 'i32');
-                        const lenMsg = Module.getValue(errorPtr + 12, 'i32');
-                        errorMessages.push("line " + line + ": " + Module.UTF8ToString(msgPtr, lenMsg));
-                        errorPtr += 20;
+                const RasmAssemble = Module.cwrap('RasmAssembleInfo', 'number', ['string', 'number', 'number', 'number', 'number']);
+                const RasmFreeInfoStruct = Module.cwrap('RasmFreeInfoStruct', 'void', ['number']);
+
+                const destPtr = Module._malloc(4);
+                const destLenPtr = Module._malloc(4);
+                const infoPtr = Module._malloc(4);
+
+                const assembleToSnapshot = (source) => {
+                    const result = RasmAssemble(source, source.length, destPtr, destLenPtr, infoPtr);
+                    const destLen = Module.getValue(destLenPtr, 'i32');
+                    const dest = Module.getValue(destPtr, 'i32');
+                    const info = Module.getValue(infoPtr, 'i32');
+                    let errorPtr = Module.getValue(info, 'i32');
+                    const nbError = Module.getValue(info + 4, 'i32');
+                    const maxError = Module.getValue(info + 8, 'i32');
+                    const warnErr = Module.getValue(info + 12, 'i32');
+                    if (result != 0) {
+                        const errorMessages = [];
+                        for (let i = 0; i < nbError; i++) {
+                            const line = Module.getValue(errorPtr + 4, 'i32');
+                            const msgPtr = Module.getValue(errorPtr + 8, 'i32');
+                            const lenMsg = Module.getValue(errorPtr + 12, 'i32');
+                            errorMessages.push("line " + line + ": " + Module.UTF8ToString(msgPtr, lenMsg));
+                            errorPtr += 20;
+                        }
+                        RasmFreeInfoStruct(info);
+                        return { success: false, errorMessages: errorMessages };
+                    } else {
+                        const start = Module.getValue(info + 32, 'i32');
+                        const destArray = new Uint8Array(Module.HEAPU8.buffer, dest, destLen);
+                        RasmFreeInfoStruct(info);
+                        Module._free(dest);
+
+                        const snapshotMemory = new Uint8Array(0xc000);
+                        for (let i = 0x1800; i < 0x1b00; i++) {
+                            snapshotMemory[i] = 0x38;
+                        }
+                        for (let i = 0; i < SYSVARS.length; i++) {
+                            snapshotMemory[i + 0x1c00] = SYSVARS[i];
+                        }
+                        for (let i = 0; i < destLen; i++) {
+                            snapshotMemory[start + i - 0x4000] = destArray[i];
+                        }
+                        const snapshot = {
+                            registers: {
+                                'AF': (start & 0xff) << 8,
+                                'BC': start,
+                                'HL': 0,
+                                'PC': start,
+                                'SP': start - 2,
+                                'IR': 0,
+                                'DE': 0,
+                                'BC_': 0,
+                                'DE_': 0,
+                                'HL_': 0x2758,
+                                'AF_': 0,
+                                'IY': 0x5c3a,
+                                'IX': 0,
+                                'iff1': 1,
+                                'iff2': 1,
+                                'im': 1,
+                            },
+                            ulaState: {
+                                borderColour: 0,
+                                pagingFlags: 0x10,
+                            },
+                            model: 128,
+                            memoryPages: {
+                                5: new Uint8Array(snapshotMemory.buffer, 0, 0x4000),
+                                2: new Uint8Array(snapshotMemory.buffer, 0x4000, 0x4000),
+                                0: new Uint8Array(snapshotMemory.buffer, 0x8000, 0x4000),
+                            },
+                            tstates: 0,
+                        };
+
+                        return { success: true, snapshot: snapshot, codeLength: destLen };
+
                     }
-                    RasmFreeInfoStruct(info);
-                    return {success: false, errorMessages: errorMessages};
-                } else {
-                    const start = Module.getValue(info + 32, 'i32');
-                    const destArray = new Uint8Array(Module.HEAPU8.buffer, dest, destLen);
-                    RasmFreeInfoStruct(info);
-                    Module._free(dest);
 
-                    const snapshotMemory = new Uint8Array(0xc000);
-                    for (let i=0x1800; i < 0x1b00; i++) {
-                        snapshotMemory[i] = 0x38;
-                    }
-                    for (let i=0; i < SYSVARS.length; i++) {
-                        snapshotMemory[i + 0x1c00] = SYSVARS[i];
-                    }
-                    for (let i=0; i < destLen; i++) {
-                        snapshotMemory[start + i - 0x4000] = destArray[i];
-                    }
-                    const snapshot = {
-                        registers: {
-                            'AF': (start & 0xff) << 8,
-                            'BC': start,
-                            'HL': 0,
-                            'PC': start,
-                            'SP': start - 2,
-                            'IR': 0,
-                            'DE': 0,
-                            'BC_': 0,
-                            'DE_': 0,
-                            'HL_': 0x2758,
-                            'AF_': 0,
-                            'IY': 0x5c3a,
-                            'IX': 0,
-                            'iff1': 1,
-                            'iff2': 1,
-                            'im': 1,
-                        },
-                        ulaState: {
-                            borderColour: 0,
-                            pagingFlags: 0x10,
-                        },
-                        model: 128,
-                        memoryPages: {
-                            5: new Uint8Array(snapshotMemory.buffer, 0, 0x4000),
-                            2: new Uint8Array(snapshotMemory.buffer, 0x4000, 0x4000),
-                            0: new Uint8Array(snapshotMemory.buffer, 0x8000, 0x4000),
-                        },
-                        tstates: 0,
-                    };
-
-                    return {success: true, snapshot: snapshot, codeLength: destLen};
-                    
                 }
-               
-            }
 
-            let result = assembleToSnapshot(Z80_SOURCE);
-            emu.onReady(() => {
-                emu.loadSnapshotFromStruct(result.snapshot);
-            });
-            const editor = ace.edit("source");
-            editor.setTheme("ace/theme/twilight");
-            editor.setShowPrintMargin(false);
-            editor.setFontSize(16);
-            // editor.session.setMode("ace/mode/assembly_z80");
-            editor.session.setValue(Z80_SOURCE);
-            editor.focus();
-
-            const sourceElement = document.getElementById('source');
-            const statusElement = document.getElementById('status');
-            let statusTimeout = null;
-            const clearStatus = () => {
-                statusElement.innerText = '';
-                statusElement.className = '';
-                statusTimeout = null;
-            };
-
-            const tryToAssemble = () => {
-                const source = editor.getValue();
-                if(sender_mode) {
-                    ws_stream.send(
-                        JSON.stringify({
-                            "source": source,
-                            "compile": true,
-                        })
-                    );
-                }
-                const result = assembleToSnapshot(source);
-                if (result.success) {
-                    if (statusTimeout) {
-                        clearTimeout(statusTimeout);
-                    }
-                    statusElement.innerText = `Assembled OK (${result.codeLength} bytes)`;
-                    statusElement.className = "success";
+                let result = assembleToSnapshot(Z80_SOURCE);
+                emu.onReady(() => {
                     emu.loadSnapshotFromStruct(result.snapshot);
-                    statusTimeout = setTimeout(clearStatus, 5000);
-                } else {
-                    if (statusTimeout) {
-                        clearTimeout(statusTimeout);
-                    }
-                    statusElement.className = "error";
-                    statusElement.innerText = (result.errorMessages.join("\n"));
-                }
-            };
+                });
+                const editor = ace.edit("source");
+                editor.setTheme("ace/theme/twilight");
+                editor.setShowPrintMargin(false);
+                editor.setFontSize(16);
+                editor.session.setValue(Z80_SOURCE);
+                editor.focus();
 
-            window.addEventListener("keydown", (event) => {
-                if (event.code == 'KeyS' && (event.metaKey || event.ctrlKey)) {
-                    event.preventDefault();
-                    tryToAssemble();
-                } else if (event.code == 'KeyH' && (event.metaKey || event.ctrlKey)) {
-                    event.preventDefault();
-                    if (sourceElement.style.display == 'none') {
-                        sourceElement.style.display = 'block';
-                        statusElement.style.display = 'block';
-                        editor.focus();
-                    } else {
-                        sourceElement.style.display = 'none';
-                        statusElement.style.display = 'none';
+                const sourceElement = document.getElementById('source');
+                const statusElement = document.getElementById('status');
+                let statusTimeout = null;
+                const clearStatus = () => {
+                    statusElement.innerText = '';
+                    statusElement.className = '';
+                    statusTimeout = null;
+                };
+
+                const tryToAssemble = () => {
+                    const source = editor.getValue();
+                    if (sender_mode) {
+                        ws_stream.send(
+                            JSON.stringify({
+                                "source": source,
+                                "cursor": editor.selection.getCursor(),
+                                "compile": true,
+                            })
+                        );
                     }
-                } else if (event.code == 'Enter' && (event.metaKey || event.ctrlKey)) {
-                    event.preventDefault();
+                    const result = assembleToSnapshot(source);
+                    if (result.success) {
+                        if (statusTimeout) {
+                            clearTimeout(statusTimeout);
+                        }
+                        statusElement.innerText = `Assembled OK (${result.codeLength} bytes)`;
+                        statusElement.className = "success";
+                        emu.loadSnapshotFromStruct(result.snapshot);
+                        statusTimeout = setTimeout(clearStatus, 5000);
+                    } else {
+                        if (statusTimeout) {
+                            clearTimeout(statusTimeout);
+                        }
+                        statusElement.className = "error";
+                        statusElement.innerText = (result.errorMessages.join("\n"));
+                    }
+                };
+
+                window.addEventListener("keydown", (event) => {
+                    if (event.code == 'KeyS' && (event.metaKey || event.ctrlKey)) {
+                        event.preventDefault();
+                        tryToAssemble();
+                    } else if (event.code == 'KeyH' && (event.metaKey || event.ctrlKey)) {
+                        event.preventDefault();
+                        if (sourceElement.style.display == 'none') {
+                            sourceElement.style.display = 'block';
+                            statusElement.style.display = 'block';
+                            editor.focus();
+                        } else {
+                            sourceElement.style.display = 'none';
+                            statusElement.style.display = 'none';
+                        }
+                    } else if (event.code == 'Enter' && (event.metaKey || event.ctrlKey)) {
+                        event.preventDefault();
+                        if (document.fullscreenElement) {
+                            document.exitFullscreen();
+                        } else {
+                            bazematic.requestFullscreen();
+                        }
+                    }
+                });
+
+                let waitingToSend = false;
+                const sendCode = () => {
+                    if (sender_mode) {
+                        ws_stream.send(
+                            JSON.stringify({
+                                "source": editor.getValue(),
+                                "cursor": editor.selection.getCursor(),
+                            })
+                        );
+                    }
+                    waitingToSend = false;
+                }
+
+                editor.on("change", () => {
+                    if (sender_mode) {
+                        if (!waitingToSend) {
+                            waitingToSend = true;
+                            setTimeout(sendCode, 300);
+                        }
+                    }
+                });
+
+                const bazematic = document.getElementById('bazematic');
+                const emuRoot = document.getElementById('jsspeccy');
+                const emuCanvas = emuRoot.getElementsByTagName('canvas')[0];
+                const emuWrapper = emuCanvas.parentElement;
+                bazematic.addEventListener('fullscreenchange', () => {
                     if (document.fullscreenElement) {
-                        document.exitFullscreen();
+                        emuWrapper.style.height = window.screen.availHeight + 'px';
+                        const emuWidth = window.screen.availHeight * 640 / 480;
+                        emuWrapper.style.width = emuWidth + 'px';
+                        emuWrapper.style.left = (window.screen.availWidth - emuWidth) / 2 + 'px';
+                        emuCanvas.style.width = '100%';
+                        emuCanvas.style.height = '100%';
+
+                        sourceElement.style.height = window.screen.availHeight + 'px';
+                        sourceElement.style.width = emuWidth + 'px';
+                        sourceElement.style.left = (window.screen.availWidth - emuWidth) / 2 + 'px';
+                        statusElement.style.left = (window.screen.availWidth - emuWidth) / 2 + 'px';
                     } else {
-                        bazematic.requestFullscreen();
+                        emuRoot.style.position = 'absolute';
+                        emuCanvas.style.width = '640px';
+                        emuCanvas.style.height = '480px';
+                        emuWrapper.style.left = '0px';
+                        emuWrapper.style.width = '640px';
+                        emuWrapper.style.height = '480px';
+
+                        sourceElement.style.width = '640px';
+                        sourceElement.style.height = '480px';
+                        sourceElement.style.left = '0px';
+                        statusElement.style.left = '0px';
                     }
-                }
-            });
-
-            let waitingToSend = false;
-            const sendCode = () => {
-                if(sender_mode) {
-                    ws_stream.send(
-                        JSON.stringify({
-                            "source": editor.getValue(),
-                        })
-                    );
-                }
-                waitingToSend = false;
-            }
-
-            editor.on("change", () => {
-                if(sender_mode) {
-                    if (!waitingToSend) {
-                        waitingToSend = true;
-                        setTimeout(sendCode, 300);
-                    }
-                }
-            });
-
-            const bazematic = document.getElementById('bazematic');
-            const emuRoot = document.getElementById('jsspeccy');
-            const emuCanvas = emuRoot.getElementsByTagName('canvas')[0];
-            const emuWrapper = emuCanvas.parentElement;
-            bazematic.addEventListener('fullscreenchange', () => {
-                if (document.fullscreenElement) {
-                    emuWrapper.style.height = window.screen.availHeight + 'px';
-                    const emuWidth = window.screen.availHeight * 640/480;
-                    emuWrapper.style.width = emuWidth + 'px';
-                    emuWrapper.style.left = (window.screen.availWidth - emuWidth) / 2 + 'px';
-                    emuCanvas.style.width = '100%';
-                    emuCanvas.style.height = '100%';
-
-                    sourceElement.style.height = window.screen.availHeight + 'px';
-                    sourceElement.style.width = emuWidth + 'px';
-                    sourceElement.style.left = (window.screen.availWidth - emuWidth) / 2 + 'px';
-                    statusElement.style.left = (window.screen.availWidth - emuWidth) / 2 + 'px';
-                } else {
-                    emuRoot.style.position = 'absolute';
-                    emuCanvas.style.width = '640px';
-                    emuCanvas.style.height = '480px';
-                    emuWrapper.style.left = '0px';
-                    emuWrapper.style.width = '640px';
-                    emuWrapper.style.height = '480px';
-
-                    sourceElement.style.width = '640px';
-                    sourceElement.style.height = '480px';
-                    sourceElement.style.left = '0px';
-                    statusElement.style.left = '0px';
-                }
-            });
-
-            const ws_start = document.getElementById("ws_start")
-            const ws_status = document.getElementById("ws_status")
-            ws_start.onclick = () => {
-                const ws_address = document.getElementById("ws_address")
-                const ws_sender = document.getElementById("ws_sender")
-                const ws_grabber = document.getElementById("ws_grabber")
-                sender_mode = ws_sender.checked;//🟠🟡🟢🔵
-                ws_stream = new WebSocket(ws_address.value);
-                ws_stream.addEventListener("open", (event)=>{
-                    ws_status.innerHTML = "🟢";
                 });
-                ws_stream.addEventListener("close", (event)=>{
-                    ws_status.innerHTML = "🟠";
-                });
-                ws_stream.addEventListener("message", (event)=>{ 
-                    if(ws_grabber.checked) {
-                        ws_status.innerHTML = "🔵";
+
+                if (reqMode == "grabber" && reqWsAddress != "") {
+                    ws_stream = new WebSocket(reqWsAddress);
+                    ws_stream.addEventListener("message", (event) => {
                         const message = JSON.parse(event.data);
                         editor.setValue(message.source);
+                        editor.gotoLine(message.cursor.row + 1);
                         if (message.compile) {
                             tryToAssemble();
                         }
-                        setTimeout(() => {ws_status.innerHTML = "🟢";},500);
+                    });
+                } else {
+                    const ws_start = document.getElementById("ws_start")
+                    const ws_status = document.getElementById("ws_status")
+                    ws_start.onclick = () => {
+                        const ws_address = document.getElementById("ws_address")
+                        const ws_sender = document.getElementById("ws_sender")
+                        const ws_grabber = document.getElementById("ws_grabber")
+                        sender_mode = ws_sender.checked;//🟠🟡🟢🔵
+                        ws_stream = new WebSocket(ws_address.value);
+                        ws_stream.addEventListener("open", (event) => {
+                            ws_status.innerHTML = "🟢";
+                        });
+                        ws_stream.addEventListener("close", (event) => {
+                            ws_status.innerHTML = "🟠";
+                        });
+                        ws_stream.addEventListener("message", (event) => {
+                            if (ws_grabber.checked) {
+                                ws_status.innerHTML = "🔵";
+                                const message = JSON.parse(event.data);
+                                editor.setValue(message.source);
+                                if (message.compile) {
+                                    tryToAssemble();
+                                }
+                                setTimeout(() => { ws_status.innerHTML = "🟢"; }, 500);
+                            }
+                        })
                     }
-                })
+                }
+
+                if (reqMode == "grabber" && reqWsAddress != "") {
+                    document.title = 'Grabber: ' + reqWsAddress;
+                    document.getElementById("instructions").remove();
+                    document.getElementById("stream").remove();
+
+                    sourceElement.classList.add("grabber");
+
+                    editor.setOptions({
+                        readOnly: true,
+                        fixedWidthGutter: true,
+                    });                  
+                }                
             }
-        }
-    };
+        };
     </script>
     <script src="rasm/rasm.js"></script>
 </head>
+
 <body>
     <div id="instructions">
         <h1>bazematic</h1>
@@ -342,10 +391,13 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
     </div>
     <div id="stream">
         <h1>Stream <span id="ws_status">🔴</span></h1>
-        <h2><p> <label for="sender">Sender</label><input type="radio" id="ws_sender" name="ws_method" value="sender" checked /> | <label for="grabber">Grabber</label><input type="radio" id="ws_grabber" name="ws_method" value="grabber" checked /> </p>
-            </h2>
-        <p><input id="ws_address" value="ws://drone.alkama.com:9000/mf2024/1"/></p>
-      <p><button id="ws_start">Start</button></p>
+        <h2>
+            <p> <label for="sender">Sender</label><input type="radio" id="ws_sender" name="ws_method" value="sender"
+                    checked /> | <label for="grabber">Grabber</label><input type="radio" id="ws_grabber"
+                    name="ws_method" value="grabber" checked /> </p>
+        </h2>
+        <p><input id="ws_address" value="ws://drone.alkama.com:9000/mf2024/1" /></p>
+        <p><button id="ws_start">Start</button></p>
     </div>
     <div id="bazematic">
         <div id="jsspeccy"></div>
@@ -353,4 +405,5 @@ const SYSVARS = [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x21, 0x0d, 0x0d, 0x23, 0x0
         <pre id="status"></pre>
     </div>
 </body>
+
 </html>
