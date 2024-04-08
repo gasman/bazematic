@@ -10,16 +10,19 @@
         }
 
         #instructions {
-            width: 200px;
+            width: 240px;
             position: absolute;
             border: 1px solid black;
             background-color: white;
             padding: 10px;
         }
 
-        #stream {
-            width: 200px;
+        #ws_address {
+            width: 100%;
+        }
 
+        #stream {
+            width: 240px;
             top: 300px;
             position: absolute;
             border: 1px solid black;
@@ -194,7 +197,13 @@ up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret
 
                 }
 
-                let result = assembleToSnapshot(Z80_SOURCE);
+                let initialSource = Z80_SOURCE;
+                const storedSource = localStorage.getItem("source");
+                if (storedSource != "") {
+                    initialSource = storedSource;
+                }
+
+                let result = assembleToSnapshot(initialSource);
                 emu.onReady(() => {
                     emu.loadSnapshotFromStruct(result.snapshot);
                 });
@@ -202,8 +211,19 @@ up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret
                 editor.setTheme("ace/theme/twilight");
                 editor.setShowPrintMargin(false);
                 editor.setFontSize(16);
-                editor.session.setValue(Z80_SOURCE);
+                editor.session.setValue(initialSource);
                 editor.focus();
+
+
+                document.getElementById("reset_source").onclick = () => {
+                    if (!confirm("Reset source code to default?")) {
+                        return false;
+                    }
+
+                    localStorage.removeItem("source");
+                    editor.session.setValue(Z80_SOURCE);
+                    editor.focus();
+                }   
 
                 const sourceElement = document.getElementById('source');
                 const statusElement = document.getElementById('status');
@@ -287,6 +307,8 @@ up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret
                             setTimeout(sendCode, 300);
                         }
                     }
+
+                    localStorage.setItem("source", editor.getValue())
                 });
 
                 const bazematic = document.getElementById('bazematic');
@@ -371,7 +393,7 @@ up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret
                         readOnly: true,
                         fixedWidthGutter: true,
                     });                  
-                }                
+                } 
             }
         };
     </script>
@@ -388,6 +410,7 @@ up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret
             <li>cmd + enter: toggle fullscreen</li>
             <li>cmd + H: show / hide code</li>
         </ul>
+        <p><button id="reset_source">Reset source</button></p>
     </div>
     <div id="stream">
         <h1>Stream <span id="ws_status">🔴</span></h1>
