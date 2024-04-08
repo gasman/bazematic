@@ -199,7 +199,7 @@ up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret
 
                 let initialSource = Z80_SOURCE;
                 const storedSource = localStorage.getItem("source");
-                if (storedSource != "") {
+                if (storedSource !== null && storedSource != "") {
                     initialSource = storedSource;
                 }
 
