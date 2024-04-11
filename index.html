@@ -63,13 +63,6 @@
             color: #666;
         }
 
-        #source.grabber .ace_scrollbar {
-            display: none;
-        }
-        #source.grabber .ace_scroller {
-            right: 0 !important; 
-        }
-
         #status {
             position: absolute;
             bottom: 0;
@@ -86,6 +79,21 @@
         #status.success {
             color: #0f0;
         }
+
+        /* Grabber mode */
+
+        #bazematic.grabber {
+            margin: 0;
+        }
+
+        #bazematic.grabber #source .ace_scrollbar {
+            display: none;
+        }
+
+        #bazematic.grabber #source .ace_scroller {
+            right: 0 !important; 
+        }
+
     </style>
     <script src="jsspeccy/jsspeccy.js"></script>
     <script src="ace/ace.js"></script>
@@ -347,8 +355,7 @@ up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret
                     document.title = 'Grabber: ' + reqWsAddress;
                     document.getElementById("instructions").remove();
                     document.getElementById("stream").remove();
-
-                    sourceElement.classList.add("grabber");
+                    bazematic.classList.add("grabber");
 
                     editor.setOptions({
                         readOnly: true,
