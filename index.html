@@ -91,9 +91,8 @@
         }
 
         #bazematic.grabber #source .ace_scroller {
-            right: 0 !important; 
+            right: 0 !important;
         }
-
     </style>
     <script src="jsspeccy/jsspeccy.js"></script>
     <script src="ace/ace.js"></script>
@@ -116,6 +115,8 @@ up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret
         const urlParams = new URLSearchParams(window.location.search);
         const reqMode = urlParams.get('mode');
         const reqWsAddress = urlParams.get('ws');
+        const isGrabber = reqMode == "grabber" && reqWsAddress != ""
+        const isSender = reqMode == "sender" && reqWsAddress != ""
 
         var Module = {
             onRuntimeInitialized: () => {
@@ -206,9 +207,13 @@ up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret
                 }
 
                 let initialSource = Z80_SOURCE;
-                const storedSource = localStorage.getItem("source");
-                if (storedSource !== null && storedSource != "") {
-                    initialSource = storedSource;
+                if (isGrabber) {
+                    initialSource = '   ; waiting code from '+ reqWsAddress;
+                } else {
+                    const storedSource = localStorage.getItem("source");
+                    if (storedSource !== null && storedSource != "") {
+                        initialSource = storedSource;
+                    }
                 }
 
                 let result = assembleToSnapshot(initialSource);
@@ -231,7 +236,7 @@ up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret
                     localStorage.removeItem("source");
                     editor.session.setValue(Z80_SOURCE);
                     editor.focus();
-                }   
+                }
 
                 const sourceElement = document.getElementById('source');
                 const statusElement = document.getElementById('status');
@@ -351,7 +356,7 @@ up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret
                     }
                 });
 
-                if (reqMode == "grabber" && reqWsAddress != "") {
+                if (isGrabber) {
                     document.title = 'Grabber: ' + reqWsAddress;
                     document.getElementById("instructions").remove();
                     document.getElementById("stream").remove();
@@ -360,7 +365,7 @@ up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret
                     editor.setOptions({
                         readOnly: true,
                         fixedWidthGutter: true,
-                    }); 
+                    });
 
                     ws_stream = new WebSocket(reqWsAddress);
                     ws_stream.addEventListener("message", (event) => {
@@ -371,7 +376,7 @@ up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret
                             tryToAssemble();
                         }
                     });
-                } else if (reqMode == "sender" && reqWsAddress != "") {
+                } else if (isSender) {
                     document.title = 'Sender: ' + reqWsAddress;
                     document.getElementById("stream").remove();
                     ws_stream = new WebSocket(reqWsAddress);
