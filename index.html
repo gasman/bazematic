@@ -104,12 +104,53 @@
 loop
     jr loop
 
-;----------
-; snippets
-;----------   
 
-down_hl	inc h : ld a,h : and #07 : ret nz : ld a,l : sub #e0 : ld l,a : sbc a,a : and #f8 : add a,h : ld h,a : ret
-up_hl	dec h : ld a,h : cpl : and #07 : ret nz : ld a,l : sub #20 : ld l, a : ret c : ld a, h : add a, #08 : ld h,a : ret
+    
+;----------------------------------------
+; Snippets: 
+;  down_hl
+;  up_hl
+;  hl_to_scr
+;  scr_to_attrs
+;  set_point
+;  rnd16
+;  gen_sin
+;----------------------------------------
+
+;----------------------------------------
+; Next screen line address in HL
+;----------------------------------------
+down_hl	
+    inc h 
+    ld a, h 
+    and #07 
+    ret nz 
+    ld a, l 
+    sub #e0 
+    ld l, a 
+    sbc a, a 
+    and #f8 
+    add a, h 
+    ld h, a 
+    ret
+
+;----------------------------------------
+; Previous screen line address in HL
+;----------------------------------------
+up_hl	
+    dec h 
+    ld a, h 
+    cpl 
+    and #07 
+    ret nz 
+    ld a, l 
+    sub #20 
+    ld l, a 
+    ret c 
+    ld a, h 
+    add a, #08 
+    ld h, a 
+    ret
 
 ;----------------------------------------
 ; in:  L = x [0..255]
@@ -138,7 +179,6 @@ hl_to_scr
     and 7
     ret
 
-
 ;----------------------------------------
 ; in:  HL = addr in screen [4000..57FF]
 ; out: HL = addr in attrs [5800..5AFF]
@@ -150,7 +190,6 @@ scr_to_attrs
     or   #58
     ld   h, a
     ret
-
 
 ;----------------------------------------
 ; in:  L = x [0..255]
@@ -168,7 +207,6 @@ set_point
     align 8
 pixel_tbl 
     db   #80,#40,#20,#10,#08,#04,#02,#01
-
 
 ;----------------------------------------
 ; in:  none
@@ -193,7 +231,6 @@ rnd16
 .st ld  (.sd), hl
     ret
     
-
 ;----------------------------------------
 ; in:  IX = addr of 256b buffer
 ; out: generated sin table
