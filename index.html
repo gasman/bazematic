@@ -544,6 +544,9 @@ gen_sin
                 } else {
                     const ws_start = document.getElementById("ws_start")
                     const ws_status = document.getElementById("ws_status")
+                    if (reqWsAddress != null) {
+                        document.getElementById("ws_address").value = reqWsAddress;
+                    }
                     ws_start.onclick = () => {
                         const ws_address = document.getElementById("ws_address")
                         const ws_sender = document.getElementById("ws_sender")
@@ -594,7 +597,7 @@ gen_sin
                     checked /> | <label for="grabber">Grabber</label><input type="radio" id="ws_grabber"
                     name="ws_method" value="grabber" checked /> </p>
         </h2>
-        <p><input id="ws_address" value="ws://drone.alkama.com:9000/mf2024/1" /></p>
+        <p><input id="ws_address" value="ws://drone.alkama.com:9000/bazematic/1" /></p>
         <p><button id="ws_start">Start</button></p>
     </div>
     <div id="bazematic">
