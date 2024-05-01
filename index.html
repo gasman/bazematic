@@ -414,6 +414,7 @@ gen_sin
                                 "cursor": editor.selection.getCursor(),
                                 "compile": true,
                                 "handle": userHandle,
+                                "hideCode": codeIsHidden(),
                             })
                         );
                     }
@@ -435,19 +436,31 @@ gen_sin
                     }
                 };
 
+                const codeIsHidden = () => {
+                    return sourceElement.style.display == 'none';
+                }
+                const showCode = () => {
+                    sourceElement.style.display = 'block';
+                    statusElement.style.display = 'block';
+                }
+                const hideCode = () => {
+                    sourceElement.style.display = 'none';
+                    statusElement.style.display = 'none';
+                }
+
                 window.addEventListener("keydown", (event) => {
                     if (event.code == 'KeyS' && (event.metaKey || event.ctrlKey)) {
                         event.preventDefault();
                         tryToAssemble();
                     } else if (event.code == 'KeyH' && (event.metaKey || event.ctrlKey)) {
                         event.preventDefault();
-                        if (sourceElement.style.display == 'none') {
-                            sourceElement.style.display = 'block';
-                            statusElement.style.display = 'block';
+                        if (codeIsHidden()) {
+                            showCode();
+                            sendCode();
                             editor.focus();
                         } else {
-                            sourceElement.style.display = 'none';
-                            statusElement.style.display = 'none';
+                            hideCode();
+                            sendCode();
                         }
                     } else if (event.code == 'Enter' && (event.metaKey || event.ctrlKey)) {
                         event.preventDefault();
@@ -467,6 +480,7 @@ gen_sin
                                 "source": editor.getValue(),
                                 "cursor": editor.selection.getCursor(),
                                 "handle": userHandle,
+                                "hideCode": codeIsHidden(),
                             })
                         );
                     }
@@ -531,6 +545,11 @@ gen_sin
                     ws_stream.addEventListener("message", (event) => {
                         const message = JSON.parse(event.data);
                         editor.setValue(message.source);
+                        if (message.hideCode) {
+                            hideCode();
+                        } else {
+                            showCode();
+                        }
                         editor.gotoLine(message.cursor.row + 1);
                         if (message.compile) {
                             tryToAssemble();
