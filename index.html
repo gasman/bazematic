@@ -272,6 +272,7 @@ gen_sin
         const urlParams = new URLSearchParams(window.location.search);
         const reqMode = urlParams.get('mode');
         const reqWsAddress = urlParams.get('ws');
+        const userHandle = urlParams.get('handle');
         const isGrabber = reqMode == "grabber" && reqWsAddress != ""
         const isSender = reqMode == "sender" && reqWsAddress != ""
 
@@ -412,6 +413,7 @@ gen_sin
                                 "source": source,
                                 "cursor": editor.selection.getCursor(),
                                 "compile": true,
+                                "handle": userHandle,
                             })
                         );
                     }
@@ -464,6 +466,7 @@ gen_sin
                             JSON.stringify({
                                 "source": editor.getValue(),
                                 "cursor": editor.selection.getCursor(),
+                                "handle": userHandle,
                             })
                         );
                     }
