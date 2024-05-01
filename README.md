@@ -12,6 +12,14 @@ bazematic is my attempt at addressing this obvious gap in the live-coding ecosys
 
 Following the precedent of [Bonzomatic](https://github.com/Gargaj/Bonzomatic) being named after Bonzaj / Plastic who spearheaded live shader coding, bazematic is named after legendary Spectrum coder Baze / 3SC.
 
+## URL parameters
+
+The following parameters can be passed in the URL:
+
+* `mode`: `sender` or `grabber`. When either of these options is passed, the "Stream" panel is hidden and a websocket connection is immediately opened to the URL given in `ws`. In `grabber` mode, the emulator window is left aligned (for easier OBS capturing) and all other panels are hidden, and the text editor is read-only.
+* `ws`: the URL to connect to for the websocket.
+* `handle`: an identifier to be sent as part of the JSON payload to the websocket server. This is intended to be used to identify the sender, and is not used by the client itself.
+
 ## Compilation notes
 
 There isn't a proper build script right now - compiled assets from jsspeccy, rasm and ace are included directly into the repo.
